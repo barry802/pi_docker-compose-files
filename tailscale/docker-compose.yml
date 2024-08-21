@@ -1,0 +1,19 @@
+tailscale:
+  hostname: tailscale
+  image: tailscale/tailscale:latest
+  restart: unless-stopped
+  network_mode: "host" # Easy mode
+  privileged: true # I'm only about 80% sure this is required
+  volumes:
+    - /etc/portainer/tailscale:/var/lib # tailscale/tailscale.state in here is where our authkey lives
+    - /dev/net/tun:/dev/net/tun
+    - /var/run/dbus/system_bus_socket:/var/run/dbus/system_bus_socket # This seems kinda terrible, but the daemon complains a lot if it can't connect to this
+  cap_add: # Required
+    - NET_ADMIN
+    - NET_RAW
+  environment:
+    TS_HOSTNAME: "lolname" # Set this to the machine name you want to appear on the Tailscale website
+    TS_STATE_DIR: "/var/lib/tailscale" # This gives us a persistent entry in TS Machines, rather than Epehmeral
+    TS_USERSPACE: false # Bizarrely, even if you bind /dev/net/tun in, you still need to tell the image to not use userspace networking
+    TS_AUTH_ONCE: false # If you have a config error somewhere, and this is set to true, it'll be really hard to figure it out
+    TS_EXTRA_ARGS: "--advertise-exit-node"
